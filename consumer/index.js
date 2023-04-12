@@ -3,20 +3,20 @@ const amqp = require('amqplib/callback_api')
 const url = 'amqp://root:root@localhost'
 const queue = 'rmq-node-1'
 
-amqp.connect(url, function (err, conn) {
+amqp.connect(url, async function (err, conn) {
   if (!conn) {
     throw new Error(`AMQP connection not available on ${url}`)
   }
 
-  console.log('AMQP connection establised!');
+  console.log('[log] AMQP connection established!')
 
-  conn.createChannel(function (err, channel) {
-    channel.assertQueue(queue, {
+  await conn.createChannel(async function (err, channel) {
+    await channel.assertQueue(queue, {
       durable: false
     })
 
-    channel.consume(queue, function (msg) {
-      console.log(`Received queue: ${msg.content.toString()}`)
+    await channel.consume(queue, function (msg) {
+      console.log(`Received message: ${msg.content.toString()}`)
     }, {
       noAck: true
     })

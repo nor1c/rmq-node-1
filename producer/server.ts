@@ -1,5 +1,4 @@
-import amqp from 'amqplib/callback_api'
-import bodyParser from 'body-parser'
+import amqp, { Connection, Message } from 'amqplib/callback_api'
 import express, { Express, json, Request, Response, urlencoded } from 'express'
 
 class Server {
@@ -12,7 +11,7 @@ class Server {
     this.queue = 'rmq-node-1'
   }
 
-  initApp() {
+  initApp(): void {
     this.app.use(json())
     this.app.use(urlencoded({
       extended: true
@@ -22,7 +21,7 @@ class Server {
   async initMQ(): Promise<void> {
     const url = 'amqp://root:root@localhost'
 
-    await amqp.connect(url, async (err, conn) => {
+    await amqp.connect(url, async (err, conn: Connection) => {
       if (!conn) {
         throw new Error(`AMQP connection not available on ${url}`)
       }
@@ -33,12 +32,13 @@ class Server {
     })
   }
 
+  async sendMessage(message: any): Promise<void> {
+    await this.channel?.sendToQueue(this.queue, message)
+  }
+
   async router(): Promise<void> {
-    this.app.post('/new', (req: Request, res: Response) => {
-      this.channel?.assertQueue(this.queue, {
-        durable: false
-      })
-      this.channel?.sendToQueue(this.queue, Buffer.from(req.body.message))
+    this.app.post('/new', async (req: Request, res: Response) => {
+      await this.sendMessage(Buffer.from(req.body.message))
 
       res.json({
         message: `Message sent to queue: ${req.body.message}`
@@ -46,22 +46,12 @@ class Server {
     })
   }
 
-  // MQ consumer
-  async consumer(): Promise<void> {
-    this.channel?.consume(this.queue, (msg) => {
-      console.log(`Received %s`, msg?.content.toString());
-    }, {
-      noAck: true
-    })
-  }
-
   async bootstrap(host: string, port: number): Promise<void> {
     this.initApp()
     await this.initMQ()
-    this.router()
-    this.consumer()
+    await this.router()
 
-    this.app.listen(3000, () => console.log(`Producer running on http://${host}:${port}`))
+    this.app.listen(port, () => console.log(`Producer running on http://${host}:${port}`))
   }
 }
 
