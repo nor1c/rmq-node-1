@@ -32,7 +32,15 @@ class Server {
     })
   }
 
+  // make sure that the queue exists
+  async assertQueue(): Promise<void> {
+    await this.channel?.assertQueue(this.queue, {
+      durable: false
+    })
+  }
+
   async sendMessage(message: any): Promise<void> {
+    await this.assertQueue()
     await this.channel?.sendToQueue(this.queue, message)
   }
 
