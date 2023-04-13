@@ -19,7 +19,7 @@ class Server {
   }
 
   async initMQ(): Promise<void> {
-    const url = 'amqp://root:root@localhost'
+    const url = 'amqp://root:root@rabbitmq' // change to localhost if you host your own RabbitMQ service
 
     await amqp.connect(url, async (err, conn: Connection) => {
       if (!conn) {

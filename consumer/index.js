@@ -1,6 +1,6 @@
 const amqp = require('amqplib/callback_api')
 
-const url = 'amqp://root:root@localhost'
+const url = 'amqp://root:root@rabbitmq' // change to localhost if you host your own RabbitMQ service
 const queue = 'rmq-node-1'
 
 amqp.connect(url, async function (err, conn) {
