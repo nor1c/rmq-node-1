@@ -46,7 +46,15 @@ class Server {
 
   async router(): Promise<void> {
     this.app.post('/new', async (req: Request, res: Response) => {
-      await this.sendMessage(Buffer.from(req.body.message))
+      const loop = req.body.loop
+      
+      const sendMsgFunction = () => this.sendMessage(Buffer.from(req.body.message))
+
+      const msgInt = setInterval(sendMsgFunction, 1000)
+
+      setTimeout(() => {
+        clearInterval(msgInt)
+      }, loop*1000);
 
       res.json({
         message: `Message sent to queue: ${req.body.message}`
